@@ -42,6 +42,8 @@ private:
     static void* clientManager(void *clientData);
 
     LinkedList<int> clientes = LinkedList<int>();
+
+    static LinkedList<char*> splitMessage(string message);
 };
 
 

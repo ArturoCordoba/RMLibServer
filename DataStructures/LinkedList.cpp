@@ -161,6 +161,26 @@ void LinkedList<T>::deleteElement(int position) {
     }
 }
 
+/// Metodo para eliminar un elemento de la lista
+/// \tparam T Tipo de dato de la lista
+/// \param data Elemento que se desea eliminar
+template <class T>
+void LinkedList<T>::deleteElement2(T data) {
+    Node<T>* current = first;
+
+    if(current->getData() == data){
+        first = first->getNext();
+    } else{
+        while(current != nullptr && current->getNext() != nullptr){
+            if(current->getNext()->getData() == data){
+                current->setNext(current->getNext()->getNext());
+                this->size--;
+            }
+            current = current->getNext();
+        }
+    }
+}
+
 template <class T>
 void LinkedList<T>::printList() {
     Node<T> *current = first;

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "DataStructures/RMRef_H.h"
 #include "Socket/SocketServer.h"
+#include "MemoryManager.h"
 
 SocketServer *server;
 
@@ -18,6 +19,7 @@ void* serverRun(void*)
 
 int main(int argc, char *argv[])
 {
+    MemoryManager* memoryManager = MemoryManager::getInstance();
     server = new SocketServer;
     pthread_t hiloServer;
     pthread_create(&hiloServer,0,serverRun,NULL);

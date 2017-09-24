@@ -33,6 +33,8 @@ public:
 
     void deleteElement(int position);
 
+    void deleteElement2(T data);
+
     void printList();
 };
 

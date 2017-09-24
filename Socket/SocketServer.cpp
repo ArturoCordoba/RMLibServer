@@ -4,6 +4,7 @@
 
 #include "SocketServer.h"
 #include "../DataStructures/RMRef_H.h"
+#include "../MemoryManager.h"
 
 SocketServer::SocketServer()
 {
@@ -64,20 +65,35 @@ void SocketServer::run()
 void* SocketServer::clientManager(void *clientData) {
     dataSocket *data = (dataSocket*)clientData;
     while (true) {
-        string mensaje;
+        string message;
         while (true) {
             char buffer[10] = {0}; //Se leen 10 caracteres
             int bytes = recv(data->descriptor, buffer, 10, 0);
-            mensaje.append(buffer, bytes);
-            if(bytes < 10) //caso en el que se ha leido el mensaje entero
+            message.append(buffer, bytes);
+            if(bytes < 10) //caso en el que se ha leido el message entero
                 break; //se finaliza el ciclo
         }
-        if(mensaje.length() > 0) { //Caso en el que el mensaje entrante es distinto de nulo
-            //cout << mensaje << endl;
-            RMRef_H* ref = RMRef_H::rm_new(mensaje); //Se crea la estructura de almacenamiento
-            mensaje = {0}; //Se limpia el mensaje
+        if(message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
+            LinkedList<char*> msg = splitMessage(message);
+            char* action = msg.getElement(0)->getData();
+            message = {0}; //Se limpia el message
 
-            cout << "Key: " << ref->getKey() << endl << "Value: " << ref->getValue() << endl << "Value size: " << ref->getValue_size() << endl;
+            if(strcmp(action,"store") == 0){  //Se trata de una solicitud de almacenamiento
+                RMRef_H* ref = (RMRef_H*) malloc(sizeof(RMRef_H));
+
+                char* key = msg.getElement(1)->getData(); //Se obtiene la key
+                char* value = msg.getElement(2)->getData(); //Se obtiene el value
+                char* charValueSize = msg.getElement(3)->getData(); //Se obtiene el value_size, es tipo char.
+                int value_size = atoi(charValueSize);
+
+                ref = new RMRef_H(key, value, value_size); //Se crea la estructura de almacenamiento
+                MemoryManager* memoryManager = MemoryManager::getInstance();
+                memoryManager->insertElement(ref);
+                cout << "RMRef_H creado e insertado!" << endl;
+                //cout << "Key: " << ref->getKey() << endl << "Value: " << ref->getValue() << endl << "Value size: " << ref->getValue_size() << endl;
+            } else if (strcmp(action, "test")){
+                MemoryManager* memoryManager = MemoryManager::getInstance();
+            }
         }
     }
 
@@ -91,4 +107,19 @@ void SocketServer::setMenssage(const char *msn)
 {
     for(unsigned int i = 0 ; i < clientes.getSize() ; i++)
         cout << "bytes enviados "<< send(clientes.getElement(i)->getData(), msn, strlen(msn), 0);
+}
+
+LinkedList<char*> SocketServer::splitMessage(string message) {
+    LinkedList<char*> list = LinkedList<char*>();
+    char *charRef = strdup(message.c_str());
+    char* pch;
+    pch = strtok (charRef,","); //Separa el char cuando lea la coma
+    while (pch != NULL)
+    {
+        list.insertAtEnd(pch);
+        //printf ("%s\n",pch);     // Se guarda el dato en la lista
+        pch = strtok (NULL, ",");  // Separa el resto de la cadena cuando lea la coma
+    }
+
+    return list;
 }

@@ -15,6 +15,7 @@ private:
     char* key;
     char* value;
     int value_size;
+    int totalReferences;
 
 public:
     RMRef_H(char* key, char* value, int value_size);
@@ -25,7 +26,13 @@ public:
 
     int getValue_size();
 
-    static RMRef_H* rm_new(string charRef);
+    void addReference();
+
+    void removeReference();
+
+    int getTotalReferences();
+
+    static RMRef_H* rm_new(LinkedList<char*> list);
 
     bool operator == (RMRef_H &ref);
 };

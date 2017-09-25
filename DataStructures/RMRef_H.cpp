@@ -49,6 +49,14 @@ RMRef_H* RMRef_H::rm_new(LinkedList<char*> list) {
     return ref;
 }
 
+/// Sobrecarga del operador ==, se compara si los value son iguales
+/// \param ref1 Referencia con la que se esta comparando
+/// \return Si son iguales true, si son distintos false
 bool RMRef_H::operator==(RMRef_H &ref1) {
+    if(strcmp(key, ref1.getKey()) == 0) return (true);
+    return (false);
+}
 
+ostream& operator<<(ostream &os, RMRef_H &ref) {
+    os << ref.getKey();
 }

@@ -60,8 +60,9 @@ void SocketServer::run()
     close(descriptor); //Se ciera el server
 }
 
-/// Metodo que administra los clientes
-/// \param clientData Informacion del cliente
+/// Metodo que administra las solicitudes de los clientes
+/// \param clientData Informacion del cliente en cuestion
+/// \return
 void* SocketServer::clientManager(void *clientData) {
     dataSocket *data = (dataSocket*)clientData;
     while (true) {
@@ -70,29 +71,49 @@ void* SocketServer::clientManager(void *clientData) {
             char buffer[10] = {0}; //Se leen 10 caracteres
             int bytes = recv(data->descriptor, buffer, 10, 0);
             message.append(buffer, bytes);
-            if(bytes < 10) //caso en el que se ha leido el message entero
+            if (bytes < 10) //caso en el que se ha leido el message entero
                 break; //se finaliza el ciclo
         }
-        if(message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
-            LinkedList<char*> msg = splitMessage(message);
-            char* action = msg.getElement(0)->getData();
+        if (message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
+            LinkedList<char *> msg = splitMessage(message);
+            char *action = msg.getElement(0)->getData();
             message = {0}; //Se limpia el message
 
-            if(strcmp(action,"store") == 0){  //Se trata de una solicitud de almacenamiento
-                RMRef_H* ref = (RMRef_H*) malloc(sizeof(RMRef_H));
+            if (strcmp(action, "store") == 0) {  //Se trata de una solicitud de almacenamiento
+                RMRef_H *ref;
 
-                char* key = msg.getElement(1)->getData(); //Se obtiene la key
-                char* value = msg.getElement(2)->getData(); //Se obtiene el value
-                char* charValueSize = msg.getElement(3)->getData(); //Se obtiene el value_size, es tipo char.
+                char *key = msg.getElement(1)->getData(); //Se obtiene la key
+                char *value = msg.getElement(2)->getData(); //Se obtiene el value
+                char *charValueSize = msg.getElement(3)->getData(); //Se obtiene el value_size, es tipo char.
                 int value_size = atoi(charValueSize);
 
                 ref = new RMRef_H(key, value, value_size); //Se crea la estructura de almacenamiento
-                MemoryManager* memoryManager = MemoryManager::getInstance();
-                memoryManager->insertElement(ref);
-                cout << "RMRef_H creado e insertado!" << endl;
-                //cout << "Key: " << ref->getKey() << endl << "Value: " << ref->getValue() << endl << "Value size: " << ref->getValue_size() << endl;
-            } else if (strcmp(action, "test")){
-                MemoryManager* memoryManager = MemoryManager::getInstance();
+                MemoryManager *memoryManager = MemoryManager::getInstance();
+                bool result = memoryManager->insertElement(ref);
+                cout << "Insertado, tamaño: " << memoryManager->getSize() << endl;
+
+            } else if (strcmp(action, "erase") == 0) { //Se trata de una eliminacion
+                RMRef_H *ref2;
+
+                char *key = msg.getElement(1)->getData(); //Se obtiene la key
+
+                MemoryManager *memoryManager = MemoryManager::getInstance();
+                bool result = memoryManager->deleteElement(key); //Se intenta realizar la eliminacion
+                cout << "Eliminado, tamaño: " << memoryManager->getSize() << endl;
+
+            } else if (strcmp(action, "get") == 0) {
+                RMRef_H *ref3;
+                char *key = msg.getElement(1)->getData(); //Se obtiene la key
+
+                MemoryManager *memoryManager = MemoryManager::getInstance();
+                RMRef_H *ref_h = memoryManager->getElement(key); //Se intenta obtener el elemento
+                cout << "Obtenido: ";
+                if (ref_h != nullptr)
+                    cout << *ref_h << endl;
+
+            } else if (strcmp(action, "printlist") == 0) {
+                MemoryManager *memoryManager = MemoryManager::getInstance();
+                memoryManager->printMemory();
             }
         }
     }

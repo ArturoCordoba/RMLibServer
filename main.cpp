@@ -35,4 +35,19 @@ int main(int argc, char *argv[])
 
     delete server;
     return 0;
+
+
+    /*LinkedList<int>* list = new LinkedList<int>();
+
+    for (int i = 1; i <= 10; ++i) {
+        list->insertAtEnd(i);
+    }
+
+    list->printList();
+    cout << "Tamaño: " << list->getSize() << endl << endl;
+
+    list->deleteElement2(2);
+
+    list->printList();
+    cout << "Tamaño: " << list->getSize() << endl;*/
 }

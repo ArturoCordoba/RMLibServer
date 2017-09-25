@@ -13,7 +13,15 @@ class MemoryManager {
 public:
     static MemoryManager* getInstance();
 
-    static void insertElement(RMRef_H* ref);
+    static bool insertElement(RMRef_H* ref);
+
+    static bool deleteElement(char* key);
+
+    static RMRef_H* getElement(char* key);
+
+    static void printMemory();
+
+    static int getSize();
 
 private:
     MemoryManager();

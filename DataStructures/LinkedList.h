@@ -29,6 +29,8 @@ public:
 
     Node<T>* getElement(int position);
 
+    Node<T>* getElement2(T data);
+
     void setElement(T element, int position);
 
     void deleteElement(int position);

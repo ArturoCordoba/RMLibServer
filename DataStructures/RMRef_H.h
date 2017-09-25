@@ -34,8 +34,10 @@ public:
 
     static RMRef_H* rm_new(LinkedList<char*> list);
 
-    bool operator == (RMRef_H &ref);
+    bool operator==(RMRef_H &ref1);
 };
+
+std::ostream& operator<< (ostream &os, RMRef_H &ref);
 
 
 #endif //RMLIBSERVER_RMREF_H_H

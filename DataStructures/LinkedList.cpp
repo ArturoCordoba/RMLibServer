@@ -114,6 +114,20 @@ Node<T>* LinkedList<T>::getElement(int position) {
     return current;
 }
 
+template <class T>
+Node<T>* LinkedList<T>::getElement2(T data) {
+    Node<T> *current = first; //Punto de partida en la busqueda
+
+    for (int i = 0; i < size; ++i) {
+        if (*current->getData() == *data){ //Coincide el elemento actual con el que se esta buscando
+            return current; //Se retorna
+        } else //No coinciden los elementos
+            current = current->getNext(); //Se continua con el siguiente nodo en la lista
+    }
+    Node<T>* notFoundNode = new Node<T>(nullptr); //Se crea un nodo con un data nulo
+    return notFoundNode; //Elemento no estaba en la lista
+}
+
 /// Metodo para establecer el dato que se estaba guardando en una posicion especifica
 /// \tparam T Tipo del dato que se desea guardar
 /// \param element Elemento que se desea almacenar
@@ -168,11 +182,12 @@ template <class T>
 void LinkedList<T>::deleteElement2(T data) {
     Node<T>* current = first;
 
-    if(current->getData() == data){
+    if(*current->getData() == *data){
         first = first->getNext();
+        this->size--;
     } else{
         while(current != nullptr && current->getNext() != nullptr){
-            if(current->getNext()->getData() == data){
+            if(*current->getNext()->getData() == *data){
                 current->setNext(current->getNext()->getNext());
                 this->size--;
             }
@@ -185,7 +200,7 @@ template <class T>
 void LinkedList<T>::printList() {
     Node<T> *current = first;
     while(current != nullptr){
-        cout << (current->getData()) << " ";
+        cout << (*current->getData()) << ", ";
         current = current->getNext();
     }
     cout << endl;

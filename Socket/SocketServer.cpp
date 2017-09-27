@@ -6,8 +6,7 @@
 #include "../DataStructures/RMRef_H.h"
 #include "../MemoryManager.h"
 
-SocketServer::SocketServer()
-{
+SocketServer::SocketServer() {
 }
 
 /// Metodo que crea el socket
@@ -29,7 +28,7 @@ bool SocketServer::attachToSO() {
     if((bind(descriptor, (sockaddr *) &info, (socklen_t) sizeof(info))) < 0)
         return false; //Si la funcion bind retorna un numero negativo es que ocurrio un error
 
-    listen(descriptor, 5); //Establece el maximo de clientes que va a tener el servidor
+    listen(descriptor, 10); //Establece el maximo de clientes que va a tener el servidor
     return true; //Se ha ligado el socket correctamente
 }
 
@@ -47,14 +46,17 @@ void SocketServer::run()
         dataSocket data; //Se inicializa el data de un nuevo cliente
         socklen_t size = sizeof(data.info);
         data.descriptor = accept(descriptor, (sockaddr*) &data.info, &size); //Se intenta aceptar al cliente
-        if(data.descriptor < 0) //Si es inferior a cero ocurrio un error
-            cout << "Error al acceptar al cliente"<<endl;
-        else //Si data.descriptor es mayor a cero el cliente se acepto correctamente
-        {
-            clientes.insertAtEnd(data.descriptor); //Se añade a la lista de clientes
-            pthread_t hilo; //Se crea un nuevo hilo para atender al cliente
-            pthread_create(&hilo, 0, SocketServer::clientManager, (void *) &data); //Se le establece el controlador
-            pthread_detach(hilo); //Se le indica al SO que no almacene informacion sobre el hilo
+        while(true) {
+            if (data.descriptor < 0) //Si es inferior a cero ocurrio un error
+                cout << "Error al acceptar al cliente" << endl;
+            else //Si data.descriptor es mayor a cero el cliente se acepto correctamente
+            {
+                clientes.insertAtEnd(data); //Se añade a la lista de clientes
+                pthread_t hilo; //Se crea un nuevo hilo para atender al cliente
+                pthread_create(&hilo, 0, SocketServer::clientManager, (void *) &data); //Se le establece el controlador
+                pthread_detach(hilo); //Se le indica al SO que no almacene informacion sobre el hilo
+            }
+            break;
         }
     }
     close(descriptor); //Se ciera el server
@@ -68,6 +70,7 @@ void* SocketServer::clientManager(void *clientData) {
     while (true) {
         string message;
         while (true) {
+            //cout << "leyendo a: " << data->descriptor << endl;
             char buffer[10] = {0}; //Se leen 10 caracteres
             int bytes = recv(data->descriptor, buffer, 10, 0);
             message.append(buffer, bytes);
@@ -76,11 +79,14 @@ void* SocketServer::clientManager(void *clientData) {
         }
         if (message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
             LinkedList<char *> msg = splitMessage(message);
-            char *action = msg.getElement(0)->getData();
             message = {0}; //Se limpia el message
 
+            //cout << "Recibido!" << endl;
+
+            char *action = msg.getElement(0)->getData();
+
             if (strcmp(action, "store") == 0) {  //Se trata de una solicitud de almacenamiento
-                RMRef_H *ref;
+                RMRef_H* ref;
 
                 char *key = msg.getElement(1)->getData(); //Se obtiene la key
                 char *value = msg.getElement(2)->getData(); //Se obtiene el value
@@ -93,7 +99,7 @@ void* SocketServer::clientManager(void *clientData) {
                 cout << "Insertado, tamaño: " << memoryManager->getSize() << endl;
 
             } else if (strcmp(action, "erase") == 0) { //Se trata de una eliminacion
-                RMRef_H *ref2;
+                RMRef_H* ref2;
 
                 char *key = msg.getElement(1)->getData(); //Se obtiene la key
 
@@ -102,8 +108,8 @@ void* SocketServer::clientManager(void *clientData) {
                 cout << "Eliminado, tamaño: " << memoryManager->getSize() << endl;
 
             } else if (strcmp(action, "get") == 0) {
-                RMRef_H *ref3;
-                char *key = msg.getElement(1)->getData(); //Se obtiene la key
+                RMRef_H* ref3;
+                char* key = msg.getElement(1)->getData(); //Se obtiene la key
 
                 MemoryManager *memoryManager = MemoryManager::getInstance();
                 RMRef_H *ref_h = memoryManager->getElement(key); //Se intenta obtener el elemento
@@ -113,13 +119,16 @@ void* SocketServer::clientManager(void *clientData) {
 
             } else if (strcmp(action, "printlist") == 0) {
                 MemoryManager *memoryManager = MemoryManager::getInstance();
+                cout << "Memoria: ";
                 memoryManager->printMemory();
+                cout << "Cache: ";
+                memoryManager->printCache();
             }
         }
     }
 
-    close(data->descriptor); //Se cierra la conexion con el cliente
-    pthread_exit(NULL); //Se elimina el hilo
+    //close(data->descriptor); //Se cierra la conexion con el cliente
+    //pthread_exit(NULL); //Se elimina el hilo
 }
 
 /// Metodo para enviar un mensaje a los clientes
@@ -127,7 +136,7 @@ void* SocketServer::clientManager(void *clientData) {
 void SocketServer::setMenssage(const char *msn)
 {
     for(unsigned int i = 0 ; i < clientes.getSize() ; i++)
-        cout << "bytes enviados "<< send(clientes.getElement(i)->getData(), msn, strlen(msn), 0);
+        cout << "bytes enviados "<< send(clientes.getElement(i)->getData().descriptor, msn, strlen(msn), 0);
 }
 
 LinkedList<char*> SocketServer::splitMessage(string message) {

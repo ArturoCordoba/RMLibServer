@@ -26,23 +26,16 @@ struct dataSocket{
 class SocketServer {
 public:
     SocketServer();
-
     void run();
-
     void setMenssage(const char *msn);
 
 private:
     int descriptor;
     sockaddr_in info;
-
     bool createSocket();
-
     bool attachToSO();
-
     static void* clientManager(void *clientData);
-
-    LinkedList<int> clientes = LinkedList<int>();
-
+    LinkedList<dataSocket> clientes = LinkedList<dataSocket>();
     static LinkedList<char*> splitMessage(string message);
 };
 

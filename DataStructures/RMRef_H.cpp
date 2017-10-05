@@ -38,7 +38,7 @@ int RMRef_H::getTotalReferences() {
 
 /// Metodo para guardar la referencia en un string
 /// \return String con los datos de la referencia
-std::string RMRef_H::createChar() {
+std::string RMRef_H::createString() {
     std::string charRef; //Variable en la que guardar los datos
     char* coma = ","; //Coma para separar los diferentes elementos
     char* size = (char*) std::to_string(value_size).c_str(); //Se obtiene el value_size y se pasa a char*

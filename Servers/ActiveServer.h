@@ -16,7 +16,7 @@ public:
 
     void run();
 
-    static void* clientManager(void *clientData);
+    static void* syncronize(void* socketClient);
 
 private:
     DataSocket* serverHA = nullptr;

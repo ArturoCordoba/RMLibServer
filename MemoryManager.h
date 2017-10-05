@@ -19,6 +19,8 @@ public:
 
     static RMRef_H* getElement(char* key);
 
+    static LinkedList<RMRef_H*>* getMemory();
+
     static void printMemory();
 
     static void printCache();

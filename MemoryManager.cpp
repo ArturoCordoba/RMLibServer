@@ -80,6 +80,10 @@ RMRef_H* MemoryManager::getElement(char* key) {
     return result;
 }
 
+LinkedList<RMRef_H*>* MemoryManager::getMemory() {
+    return MemoryManager::memory;
+}
+
 /// Metodo para insertar una referencia a la memoria cache
 /// \param ref Referencia a insertar
 void MemoryManager::insertToCache(RMRef_H* ref) {

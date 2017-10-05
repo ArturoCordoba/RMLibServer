@@ -43,16 +43,16 @@ bool SocketServer::attachToSO() {
 /// \param clientData Informacion del cliente en cuestion
 /// \return
 void* SocketServer::clientManager(void *clientData) {
-    DataSocket *data = (DataSocket*)clientData;
+    DataSocket *client = (DataSocket*)clientData;
     while (true) {
         string message;
         while (true) {
             char buffer[10] = {0}; //Se leen 10 caracteres
-            int bytes = recv(data->descriptor, buffer, 10, 0);
+            int bytes = recv(client->descriptor, buffer, 10, 0);
 
             if (bytes <= 0) //La conexion se ha cerrado
             {
-                close(data->descriptor); //Se cierra el socket
+                close(client->descriptor); //Se cierra el socket
                 pthread_exit(NULL); //Se elimina el hilo
             }
 
@@ -87,7 +87,7 @@ void* SocketServer::clientManager(void *clientData) {
                 }
 
                 //Se envia la respuesta al cliente
-                sendMessage("stored", data);
+                sendMessage("stored", client);
 
             } else if (strcmp(action, "erase") == 0) { //Se trata de una eliminacion
                 RMRef_H *ref2;
@@ -106,7 +106,7 @@ void* SocketServer::clientManager(void *clientData) {
                 }
 
                 //Se envia la respuesta al cliente
-                sendMessage("erased", data);
+                sendMessage("erased", client);
 
             } else if (strcmp(action, "get") == 0) {
                 char *key = msg.getElement(1)->getData(); //Se obtiene la key
@@ -116,17 +116,24 @@ void* SocketServer::clientManager(void *clientData) {
 
                 if (ref_h != nullptr) {
                     string response = "obtained,";
-                    response.append(ref_h->createChar()); //Se añade el string de la referencia
-                    sendMessage((char *) response.c_str(), data); //Se envia
+                    response.append(ref_h->createString()); //Se añade el string de la referencia
+                    sendMessage((char *) response.c_str(), client); //Se envia
                 } else { //No se ha encontrado la referencia
-                    sendMessage("notFound", data);
+                    sendMessage("notFound", client);
                 }
 
             } else if (strcmp(action, "pasiveserver") == 0) {
-                Server::getInstance()->getActiveServer()->setServerHA(
-                        data); //Se guarda el cliente especifico del servidor de respaldo
-                break; //Se sale del while
+                PasiveServer* pasiveServer = Server::getPasiveServer();
+                if(pasiveServer == nullptr) {
+                    Server::getInstance()->getActiveServer()->setServerHA(client); //Se guarda el cliente especifico del servidor de respaldo
 
+                    //Se crea un hilo para sincronizar el servidor activo con los datos del pasivo
+                    pthread_t syncronize;
+                    pthread_create(&syncronize, 0, ActiveServer::syncronize, client);
+                    pthread_detach(syncronize);
+
+                    break;
+                }
             } else if (strcmp(action, "printlist") == 0) {
                 MemoryManager *memoryManager = MemoryManager::getInstance();
                 cout << "Memoria: ";
@@ -138,7 +145,7 @@ void* SocketServer::clientManager(void *clientData) {
         message = {0}; //Se limpia el message
     }
 
-    //close(data->descriptor); //Se cierra la conexion con el cliente
+    //close(client->descriptor); //Se cierra la conexion con el cliente
     pthread_exit(NULL); //Se elimina el hilo
 }
 

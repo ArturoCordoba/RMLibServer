@@ -33,7 +33,7 @@ public:
 
     int getTotalReferences();
 
-    std::string createChar();
+    std::string createString();
 
     static RMRef_H* rm_new(LinkedList<char*> list);
 

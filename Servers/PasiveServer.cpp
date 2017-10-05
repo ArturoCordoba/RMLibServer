@@ -3,9 +3,14 @@
 //
 
 #include "PasiveServer.h"
+#include "Server.h"
 
 void PasiveServer::setClient(SocketClient *client) {
     PasiveServer::ASConnection = client;
+}
+
+SocketClient* PasiveServer::getClient() {
+    return PasiveServer::ASConnection;
 }
 
 /// Metodo para empezar a correr el servidor
@@ -50,8 +55,18 @@ void* PasiveServer::checkConnectionAS(void *socketClient) {
 
     while(true){
         if (connected == false){ //Se verifica que no se esta conectado
-            if (client->connect(client->getIP(), client->getPort())) //Se intenta conectar
+            if (client->connect(client->getIP(), client->getPort())){ //Se intenta conectar
                 connected = true;
+
+                //Se crea un hilo para sincronizar el servidor activo con los datos del pasivo
+                pthread_t synchronize;
+                pthread_create(&synchronize, 0, PasiveServer::synchronizeAS, client);
+                pthread_detach(synchronize);
+
+                //Se cierra el hilo para realizar la sincronizacion
+                //pthread_exit(NULL);
+                sleep(60); //Se pausa para que se pueda sincronizar el servidor
+            }
         }
         int i = send(client->getSocketNum(), "pasiveserver", strlen("pasiveserver"), 0); //Se envia un mensaje para ver si hay conexion
 
@@ -60,4 +75,36 @@ void* PasiveServer::checkConnectionAS(void *socketClient) {
 
         sleep(1); //Se pausa durante un segundo
     }
+}
+
+/// Metodo para sincronizar el servidor activo con los datos del servidor pasivo
+/// \param socketClient Cliente con el servidor activo
+/// \return
+void* PasiveServer::synchronizeAS(void *socketClient) {
+    SocketClient* client = (SocketClient*) socketClient;
+
+    static pthread_mutex_t mutex;
+    pthread_mutex_lock(&mutex); //Se coloca un semaforo
+
+    LinkedList<RMRef_H*>* memory = MemoryManager::getMemory();
+
+    for (int i = 0; i < memory->getSize(); ++i) {
+        string msg = "store,"; //Se crea el string del mensaje
+        string ref = memory->getElement(i)->getData()->createString(); //Se obtiene un string de la referencia
+        char* ref_h = (char*) ref.c_str();
+        msg.append(ref_h, strlen(ref_h));
+
+        const char* message = msg.c_str();
+        client->sendMessage(message);
+
+        cout << "Enviado:" << msg << endl;
+    }
+    pthread_mutex_unlock(&mutex); //Se desbloquea el semaforo
+
+   /* //Se crea un nuevo hilo para verificar la conexion con el servidor activo
+    pthread_t checkConnection;
+    pthread_create(&checkConnection, 0, PasiveServer::checkConnectionAS, client);
+    pthread_detach(checkConnection);*/
+
+    pthread_exit(NULL);
 }

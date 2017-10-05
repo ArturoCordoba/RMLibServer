@@ -5,6 +5,7 @@
 #ifndef RMLIBSERVER_RMREF_H_H
 #define RMLIBSERVER_RMREF_H_H
 
+#include <iostream>
 #include <cstring>
 #include <string.h>
 #include <string>
@@ -32,12 +33,15 @@ public:
 
     int getTotalReferences();
 
+    std::string createChar();
+
     static RMRef_H* rm_new(LinkedList<char*> list);
 
     bool operator==(RMRef_H &ref1);
+
 };
 
-std::ostream& operator<< (ostream &os, RMRef_H &ref);
+std::ostream& operator<< (std::ostream &os, RMRef_H &ref);
 
 
 #endif //RMLIBSERVER_RMREF_H_H

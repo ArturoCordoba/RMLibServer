@@ -36,6 +36,21 @@ int RMRef_H::getTotalReferences() {
     return totalReferences;
 }
 
+/// Metodo para guardar la referencia en un string
+/// \return String con los datos de la referencia
+std::string RMRef_H::createChar() {
+    std::string charRef; //Variable en la que guardar los datos
+    char* coma = ","; //Coma para separar los diferentes elementos
+    char* size = (char*) std::to_string(value_size).c_str(); //Se obtiene el value_size y se pasa a char*
+    charRef.append(key, strlen(key)); //Se añade la llave al string
+    charRef.append(coma, strlen(coma)); //Se añade un separador
+    charRef.append(value, strlen(value)); //Se añade el valor al string
+    charRef.append(coma, strlen(coma)); //Se añade un separador
+    charRef.append(size, strlen(size)); //Se añade el tamaño al string
+
+    return charRef;
+}
+
 /// Metodo que recibe una cadena y la transforma a un objeto RMRef_H
 /// \param charRef Cadena con los atributos del objeto
 /// \return El objeto RMRef_H con los atributos ingresados
@@ -57,6 +72,6 @@ bool RMRef_H::operator==(RMRef_H &ref1) {
     return (false);
 }
 
-ostream& operator<<(ostream &os, RMRef_H &ref) {
+std::ostream& operator<<(std::ostream &os, RMRef_H &ref) {
     os << ref.getKey();
 }

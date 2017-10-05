@@ -10,7 +10,7 @@ LinkedList<RMRef_H*>* MemoryManager::memory = nullptr;
 LinkedList<RMRef_H*>* MemoryManager::cache = nullptr;
 
 MemoryManager::MemoryManager() {
-    cout << "Creando MemoryManager" << endl;
+    std::cout << "Creando MemoryManager" << std::endl;
 }
 
 /// Metodo para obtener la unica instancia de MemoryManager

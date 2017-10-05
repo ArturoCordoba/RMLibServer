@@ -5,7 +5,6 @@
 #include <iostream>
 #include "LinkedList.h"
 
-using namespace std;
 
 /// Constructor
 /// \tparam T Tipo de dato de la lista
@@ -200,8 +199,8 @@ template <class T>
 void LinkedList<T>::printList() {
     Node<T> *current = first;
     while(current != nullptr){
-        cout << (*current->getData()) << ", ";
+        std::cout << (*current->getData()) << ", ";
         current = current->getNext();
     }
-    cout << endl;
+    std::cout << std::endl;
 }

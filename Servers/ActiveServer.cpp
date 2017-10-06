@@ -63,9 +63,7 @@ void* ActiveServer::syncronize(void *socketClient) {
                 break; //se finaliza el ciclo
         }
 
-        cout << message << endl;
-
-        /*if (message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
+        if (message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
             LinkedList<char *> msg = splitMessage(message);
 
             char *action = msg.getElement(0)->getData();
@@ -82,18 +80,15 @@ void* ActiveServer::syncronize(void *socketClient) {
                 MemoryManager *memoryManager = MemoryManager::getInstance();
                 bool result = memoryManager->insertElement(ref);
 
-                //Se sincriza el servidor pasivo
-                ActiveServer *activeServer = Server::getInstance()->getActiveServer();
-                if (activeServer != nullptr) {
-                    DataSocket *pasiveServer = activeServer->getServerHA();
-                    if (pasiveServer != nullptr)
-                        sendMessage((char *) message.c_str(), pasiveServer);
-                }
-
                 //Se envia la respuesta al cliente
-                sendMessage("stored", client);
 
+                //sendMessage("stored", client);
+                cout << "Almacenado!" << endl;
+
+            } else if (strcmp(action, "ready") == 0) { //Sincronizacion completa
+                break;
             }
-        }*/
+        }
     }
+    pthread_exit(NULL);
 }

@@ -58,6 +58,9 @@ void* PasiveServer::checkConnectionAS(void *socketClient) {
             if (client->connect(client->getIP(), client->getPort())){ //Se intenta conectar
                 connected = true;
 
+                int memorySize = MemoryManager::getSize();
+
+                if(memorySize > 0){
                 //Se crea un hilo para sincronizar el servidor activo con los datos del pasivo
                 pthread_t synchronize;
                 pthread_create(&synchronize, 0, PasiveServer::synchronizeAS, client);
@@ -66,6 +69,7 @@ void* PasiveServer::checkConnectionAS(void *socketClient) {
                 //Se cierra el hilo para realizar la sincronizacion
                 //pthread_exit(NULL);
                 sleep(60); //Se pausa para que se pueda sincronizar el servidor
+                }
             }
         }
         int i = send(client->getSocketNum(), "pasiveserver", strlen("pasiveserver"), 0); //Se envia un mensaje para ver si hay conexion
@@ -98,13 +102,13 @@ void* PasiveServer::synchronizeAS(void *socketClient) {
         client->sendMessage(message);
 
         cout << "Enviado:" << msg << endl;
+
+        sleep(0.4);
+
     }
     pthread_mutex_unlock(&mutex); //Se desbloquea el semaforo
 
-   /* //Se crea un nuevo hilo para verificar la conexion con el servidor activo
-    pthread_t checkConnection;
-    pthread_create(&checkConnection, 0, PasiveServer::checkConnectionAS, client);
-    pthread_detach(checkConnection);*/
+    client->sendMessage("ready");
 
     pthread_exit(NULL);
 }

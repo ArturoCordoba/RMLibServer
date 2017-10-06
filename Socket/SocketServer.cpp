@@ -122,17 +122,20 @@ void* SocketServer::clientManager(void *clientData) {
                     sendMessage("notFound", client);
                 }
 
-            } else if (strcmp(action, "pasiveserver") == 0) {
+            } else if (strcmp(action, "pasiveserver") == 0) { //se recibe un mensaje del servidor pasivo
                 PasiveServer* pasiveServer = Server::getPasiveServer();
                 if(pasiveServer == nullptr) {
                     Server::getInstance()->getActiveServer()->setServerHA(client); //Se guarda el cliente especifico del servidor de respaldo
 
                     //Se crea un hilo para sincronizar el servidor activo con los datos del pasivo
-                    pthread_t syncronize;
-                    pthread_create(&syncronize, 0, ActiveServer::syncronize, client);
-                    pthread_detach(syncronize);
+                    int memorySize = MemoryManager::getSize();
 
-                    break;
+                    if(memorySize > 0) {
+                        pthread_t syncronize;
+                        pthread_create(&syncronize, 0, ActiveServer::syncronize, client);
+                        pthread_detach(syncronize);
+                    }
+                        break;
                 }
             } else if (strcmp(action, "printlist") == 0) {
                 MemoryManager *memoryManager = MemoryManager::getInstance();

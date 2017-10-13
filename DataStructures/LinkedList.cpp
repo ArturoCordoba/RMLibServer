@@ -195,6 +195,23 @@ void LinkedList<T>::deleteElement2(T data) {
     }
 }
 
+/// Metodo que verifica si dentro de la lista se encuentra un elemento ingresado
+/// \tparam T Tipo de dato de la lista
+/// \param data Elemento que se esta buscando
+/// \return True si el elemento esta dentro de la lista, false si no lo esta
+template <class T>
+bool LinkedList<T>::containsElement(T data) {
+    Node<T> *current = first; //Punto de partida en la busqueda
+
+    for (int i = 0; i < size; ++i) {
+        if (*current->getData() == *data){ //Coincide el elemento actual con el que se esta buscando
+            return true; //Se retorna true
+        } else //No coinciden los elementos
+            current = current->getNext(); //Se continua con el siguiente nodo en la lista
+    }
+    return false; //No se ha encontrado el elemento en la lista
+}
+
 template <class T>
 void LinkedList<T>::printList() {
     Node<T> *current = first;

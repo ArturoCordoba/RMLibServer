@@ -49,6 +49,7 @@ bool SocketClient::connect(char* ip, int port){
 
 /// Metodo para enviar un mensaje al servidor
 /// \param message Mensaje a enviar
-void SocketClient::sendMessage(const char *message) {
-    send(socketNum,message,strlen(message),0); //Se envia el mensaje
+int SocketClient::sendMessage(const char *message) {
+    int i = send(socketNum,message,strlen(message),0); //Se envia el mensaje
+    return i;
 }

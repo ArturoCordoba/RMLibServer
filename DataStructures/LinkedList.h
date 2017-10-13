@@ -37,6 +37,8 @@ public:
 
     void deleteElement2(T data);
 
+    bool containsElement(T data);
+
     void printList();
 };
 

@@ -9,7 +9,6 @@ ActiveServer* Server::activeServer = nullptr;
 PasiveServer* Server::pasiveServer = nullptr;
 
 Server::Server() {
-
 }
 
 /// Metodo para obtener la unica instancia que existe de esta clase

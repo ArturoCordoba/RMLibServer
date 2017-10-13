@@ -29,10 +29,19 @@ int main(int argc, char *argv[])
 
         cout << "Esperando nuevos clientes" << endl;
 
-        while (true) {
-            string mensaje;
-            //cin >> mensaje;
-            //activeServer->sendMessage(mensaje.c_str());
+        while (true){
+            string action1;
+            cin >> action1;
+
+            char* action = strdup(action1.c_str());
+
+            if (strcmp(action, "print") == 0) {
+                MemoryManager *memoryManager = MemoryManager::getInstance();
+                memoryManager->printMemory();
+            } else if (strcmp(action, "exit") == 0){
+                Server::getInstance()->getActiveServer()->closeSocket();
+                break;
+            }
         }
 
     } else if (strcmp(type, "2") == 0) {
@@ -47,7 +56,6 @@ int main(int argc, char *argv[])
         cin >> ipServer; //IP del servidor activo
         cout << "Puerto: ";
         cin >> portServer; //Puerto de servidor activo
-        cout << endl << "Conectando a: " << ipServer << "::" << portServer << endl;
 
         PasiveServer* pasiveServer = new PasiveServer();
         pasiveServer->setPort(portServerHA); //Se establece el puerto del servidor
@@ -62,12 +70,19 @@ int main(int argc, char *argv[])
         pthread_detach(threadServer);
 
         while (true){
-            string mensaje;
-            //cin >> mensaje;
-            //client->sendMessage(mensaje.c_str());
+            string action1;
+            cin >> action1;
+
+            char* action = strdup(action1.c_str());
+
+            if (strcmp(action, "print") == 0) {
+                MemoryManager *memoryManager = MemoryManager::getInstance();
+                memoryManager->printMemory();
+            } else if (strcmp(action, "exit") == 0){
+                Server::getInstance()->getPasiveServer()->closeSocket();
+                break;
+            }
         }
-
-
     }
 
     return 0;

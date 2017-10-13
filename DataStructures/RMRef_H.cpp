@@ -9,7 +9,7 @@ RMRef_H::RMRef_H(char* key, char* value, int value_size) {
     RMRef_H::key = key;
     RMRef_H::value = value;
     RMRef_H::value_size = value_size;
-    RMRef_H::totalReferences = 0;
+    RMRef_H::totalReferences = 1;
 }
 
 char* RMRef_H::getKey() {

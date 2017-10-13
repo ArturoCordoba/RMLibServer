@@ -23,8 +23,6 @@ public:
 
     static void printMemory();
 
-    static void printCache();
-
     static int getSize();
 
 private:
@@ -35,10 +33,6 @@ private:
     static LinkedList<RMRef_H*>* memory;
 
     static LinkedList<RMRef_H*>* cache;
-
-    static void insertToCache(RMRef_H* ref);
-
-    static RMRef_H* searchInCache(RMRef_H* ref);
 };
 
 

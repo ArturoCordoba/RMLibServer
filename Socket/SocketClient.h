@@ -26,7 +26,7 @@ public:
 
     bool connect(char* ip, int port);
 
-    void sendMessage(const char *message);
+    int sendMessage(const char *message);
 
     void ASConnection(char *ipAS, int portAS);
 

@@ -36,6 +36,8 @@ public:
 
     static void sendMessage(const char *msn, DataSocket *client);
 
+    void closeSocket();
+
 protected:
     int serverSocket;
 

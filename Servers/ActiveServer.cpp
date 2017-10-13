@@ -43,17 +43,19 @@ void ActiveServer::run() {
     close(serverSocket); //Se ciera el activeServer
 }
 
+/// Metodo para sincronizar el servidor activo con los datos que se reciben del servidor pasivo
+/// \param socketClient Cliente del servidor pasivo
+/// \return
 void* ActiveServer::syncronize(void *socketClient) {
-    DataSocket *client = (DataSocket *) socketClient;
+    DataSocket *client = (DataSocket *) socketClient; //Cliente
 
     while (true) {
         string message;
         while (true) {
             char buffer[10] = {0}; //Se leen 10 caracteres
-            int bytes = recv(client->descriptor, buffer, 10, 0);
+            int bytes = recv(client->descriptor, buffer, 10, 0); //Se lee el mensaje
 
-            if (bytes <= 0) //La conexion se ha cerrado
-            {
+            if (bytes <= 0) { //La conexion se ha cerrado
                 close(client->descriptor); //Se cierra el socket
                 pthread_exit(NULL); //Se elimina el hilo
             }
@@ -64,7 +66,7 @@ void* ActiveServer::syncronize(void *socketClient) {
         }
 
         if (message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
-            LinkedList<char *> msg = splitMessage(message);
+            LinkedList<char*> msg = splitMessage(message);
 
             char *action = msg.getElement(0)->getData();
 
@@ -78,17 +80,43 @@ void* ActiveServer::syncronize(void *socketClient) {
 
                 ref = new RMRef_H(key, value, value_size); //Se crea la estructura de almacenamiento
                 MemoryManager *memoryManager = MemoryManager::getInstance();
-                bool result = memoryManager->insertElement(ref);
-
-                //Se envia la respuesta al cliente
-
-                //sendMessage("stored", client);
-                cout << "Almacenado!" << endl;
+                memoryManager->insertElement(ref);
 
             } else if (strcmp(action, "ready") == 0) { //Sincronizacion completa
                 break;
             }
         }
     }
+    cout << "Sincronizacion completada" << endl;
+    pthread_exit(NULL); //Se sale del thread
+}
+
+/// Metodo para sincronizar el servidor pasivo con los datos del servidor activo
+/// \param socketClient Cliente del servidor pasivo
+/// \return
+void* ActiveServer::syncronizePS(void *socketClient) {
+    DataSocket* client = (DataSocket*) socketClient; //Cliente
+
+    static pthread_mutex_t mutex;
+    pthread_mutex_lock(&mutex); //Se coloca un semaforo
+
+    LinkedList<RMRef_H*>* memory = MemoryManager::getMemory(); //Se obtiene la memoria
+
+    for (int i = 0; i < memory->getSize(); ++i) {
+        string msg = "store,"; //Se crea el string del mensaje
+        string ref = memory->getElement(i)->getData()->createString(); //Se obtiene un string de la referencia
+        char* ref_h = (char*) ref.c_str(); //Se transforma el string de la referencia a un char*
+        msg.append(ref_h, strlen(ref_h)); //Se añade el char* de la referencia al mensaje a ser enviado
+
+        sendMessage(msg.c_str(), client); //Se envia el mensaje
+
+        sleep(1); //Se espera un segundo para enviar el siguiente elemento
+
+    }
+    pthread_mutex_unlock(&mutex); //Se desbloquea el semaforo
+
+    sendMessage("ready", client); //Se le indica al servidor pasivo que la sincronizacion fue completada
+    cout << "Sincronizacion del servidor pasivo completada" << endl;
+
     pthread_exit(NULL);
 }

@@ -43,28 +43,29 @@ bool SocketServer::attachToSO() {
 /// \param clientData Informacion del cliente en cuestion
 /// \return
 void* SocketServer::clientManager(void *clientData) {
-    DataSocket *client = (DataSocket*)clientData;
+    DataSocket *client = (DataSocket*)clientData; //Cliente
     while (true) {
-        string message;
-        while (true) {
-            char buffer[10] = {0}; //Se leen 10 caracteres
-            int bytes = recv(client->descriptor, buffer, 10, 0);
 
-            if (bytes <= 0) //La conexion se ha cerrado
-            {
+        string message; //Variable que guarda el mensaje recibido
+        while (true) { //Ciclio infinito que se encarga de leer el mensaje recibido
+            char buffer[10] = {0}; //Se leen 10 caracteres
+            int bytes = recv(client->descriptor, buffer, 10, 0); //Se lee el mensaje entrante
+
+            if (bytes <= 0) { //La conexion con el cliente se ha cerrado
                 close(client->descriptor); //Se cierra el socket
                 pthread_exit(NULL); //Se elimina el hilo
             }
 
-            message.append(buffer, bytes);
-            if (bytes < 10) //caso en el que se ha leido el message entero
-                break; //se finaliza el ciclo
+            message.append(buffer, bytes); //Se agregan las cadenas leidas a la variable que guarda el mensaje
+            if (bytes < 10) //Caso en el que se ha leido el message entero
+                break; //Se finaliza el ciclo
         }
 
-        if (message.length() > 0) { //Caso en el que el message entrante es distinto de nulo
-            LinkedList<char *> msg = splitMessage(message);
+        if (message.length() > 0) { //Caso en el que el mensaje entrante es distinto de nulo
 
-            char *action = msg.getElement(0)->getData();
+            LinkedList<char *> msg = splitMessage(message); //Se separa el mensaje recibido en diferentes elementos
+
+            char *action = msg.getElement(0)->getData(); //La accion a realizar es el primer elemento de la lista
 
             if (strcmp(action, "store") == 0) {  //Se trata de una solicitud de almacenamiento
                 RMRef_H *ref;
@@ -79,40 +80,44 @@ void* SocketServer::clientManager(void *clientData) {
                 bool result = memoryManager->insertElement(ref);
 
                 //Se sincriza el servidor pasivo
-                ActiveServer* activeServer = Server::getInstance()->getActiveServer();
-                if (activeServer != nullptr) {
-                    DataSocket* pasiveServer = activeServer->getServerHA();
-                    if(pasiveServer != nullptr)
-                        sendMessage((char *) message.c_str(), pasiveServer);
+                ActiveServer* activeServer = Server::getInstance()->getActiveServer(); //Se obtiene la instancia del servidor activo
+                if (activeServer != nullptr) { //El servidor activo no es nulo
+                    DataSocket* pasiveServer = activeServer->getServerHA(); //Se obtiene la instancia del servidor pasivo
+                    if(pasiveServer != nullptr) //El servidor pasivo no es nulo
+                        sendMessage((char *) message.c_str(), pasiveServer); //Se envia el mensaje recibido al servidor pasivo
                 }
 
                 //Se envia la respuesta al cliente
-                sendMessage("stored", client);
+                if(result == true){
+                    sendMessage("stored", client); //Se ha guardado la referencia
+                } else {
+                    sendMessage("keyInUse", client); //El Key de la referencia estaba en uso
+                }
 
-            } else if (strcmp(action, "erase") == 0) { //Se trata de una eliminacion
-                RMRef_H *ref2;
+            } else if (strcmp(action, "erase") == 0) { //Se trata de una solicitud de eliminacion
+                char *key = msg.getElement(1)->getData(); //Se obtiene la key de la referencia recibida
 
-                char *key = msg.getElement(1)->getData(); //Se obtiene la key
-
-                MemoryManager *memoryManager = MemoryManager::getInstance();
-                bool result = memoryManager->deleteElement(key); //Se intenta realizar la eliminacion
+                MemoryManager *memoryManager = MemoryManager::getInstance(); //Se obtiene la memoria
+                memoryManager->deleteElement(key); //Se realiza la eliminacion
 
                 //Se sincriza el servidor pasivo
-                ActiveServer* activeServer = Server::getInstance()->getActiveServer();
-                if (activeServer != nullptr) {
-                    DataSocket* pasiveServer = activeServer->getServerHA();
-                    if(pasiveServer != nullptr)
-                        sendMessage((char *) message.c_str(), pasiveServer);
+                ActiveServer* activeServer = Server::getInstance()->getActiveServer(); //Se obtiene la instancia del servidor activo
+                if (activeServer != nullptr) { //El servidor activo no es nulo
+                    DataSocket* pasiveServer = activeServer->getServerHA(); //Se obtiene la instancia del servidor pasivo
+                    if(pasiveServer != nullptr) //El servidor pasivo no es nulo
+                        sendMessage((char *) message.c_str(), pasiveServer); //Se envia el mensaje recibido al servidor pasivo
                 }
 
                 //Se envia la respuesta al cliente
                 sendMessage("erased", client);
 
             } else if (strcmp(action, "get") == 0) {
-                char *key = msg.getElement(1)->getData(); //Se obtiene la key
+                char *key = msg.getElement(1)->getData(); //Se obtiene la key de la referencia recibida
 
                 MemoryManager *memoryManager = MemoryManager::getInstance();
                 RMRef_H *ref_h = memoryManager->getElement(key); //Se intenta obtener el elemento
+
+                delete key;
 
                 if (ref_h != nullptr) {
                     string response = "obtained,";
@@ -130,25 +135,22 @@ void* SocketServer::clientManager(void *clientData) {
                     //Se crea un hilo para sincronizar el servidor activo con los datos del pasivo
                     int memorySize = MemoryManager::getSize();
 
-                    if(memorySize > 0) {
-                        pthread_t syncronize;
-                        pthread_create(&syncronize, 0, ActiveServer::syncronize, client);
-                        pthread_detach(syncronize);
+                    if(memorySize > 0){ //Se sincroniza el servidor pasivo
+                        pthread_t syncronizePS;
+                        pthread_create(&syncronizePS, 0, ActiveServer::syncronizePS, client);
+                        pthread_detach(syncronizePS);
+                    } else if(memorySize == 0) { //Se sincroniza el servidor activo
+                        pthread_t syncronizeAS;
+                        pthread_create(&syncronizeAS, 0, ActiveServer::syncronize, client);
+                        pthread_detach(syncronizeAS);
                     }
-                        break;
+                    break;
                 }
-            } else if (strcmp(action, "printlist") == 0) {
-                MemoryManager *memoryManager = MemoryManager::getInstance();
-                cout << "Memoria: ";
-                memoryManager->printMemory();
-                cout << "Cache: ";
-                memoryManager->printCache();
             }
         }
         message = {0}; //Se limpia el message
     }
 
-    //close(client->descriptor); //Se cierra la conexion con el cliente
     pthread_exit(NULL); //Se elimina el hilo
 }
 
@@ -162,15 +164,21 @@ void SocketServer::sendMessage(const char *msn, DataSocket *client) {
 /// \param message Mensaje entrante
 /// \return Lista con los elementos divididos
 LinkedList<char*> SocketServer::splitMessage(string message) {
-    LinkedList<char*> list = LinkedList<char*>();
-    char *charRef = strdup(message.c_str());
-    char* pch;
-    pch = strtok (charRef,","); //Separa el char cuando lea la coma
-    while (pch != NULL)
-    {
-        list.insertAtEnd(pch); // Se guarda el dato en la lista
-        pch = strtok (NULL, ",");  // Separa el resto de la cadena cuando lea la coma
+    LinkedList<char*> list = LinkedList<char*>(); //Lista en la que se guardar los elementos
+    char *charRef = strdup(message.c_str()); //Se transforma el mensaje a char*
+    char* element = strtok(charRef, ","); //Separa el char cuando lea la coma;
+    while (element != NULL) {
+        list.insertAtEnd(element); // Se guarda el dato en la lista
+        element = strtok (NULL, ",");  // Separa el resto de la cadena cuando lea la coma
     }
 
     return list;
+}
+
+///Metodo para cerrar el servidor
+void SocketServer::closeSocket() {
+    for (int i = 0; i < clients.getSize(); ++i) {
+        close(clients.getElement(i)->getData()->descriptor);
+    }
+    close(serverSocket);
 }

@@ -72,6 +72,14 @@ bool RMRef_H::operator==(RMRef_H &ref1) {
     return (false);
 }
 
+/// Sobrecarga del operador !=, se compara si los value son iguales
+/// \param ref1 Referencia con la que se esta comparando
+/// \return Si son diferentes true, si son iguales false
+bool RMRef_H::operator!=(RMRef_H &ref1) {
+    if(strcmp(key, ref1.getKey()) != 0) return (true);
+    return (false);
+}
+
 std::ostream& operator<<(std::ostream &os, RMRef_H &ref) {
     os << ref.getKey();
 }

@@ -117,8 +117,6 @@ void* SocketServer::clientManager(void *clientData) {
                 MemoryManager *memoryManager = MemoryManager::getInstance();
                 RMRef_H *ref_h = memoryManager->getElement(key); //Se intenta obtener el elemento
 
-                delete key;
-
                 if (ref_h != nullptr) {
                     string response = "obtained,";
                     response.append(ref_h->createString()); //Se añade el string de la referencia

@@ -92,33 +92,3 @@ void* PasiveServer::checkConnectionAS(void *socketClient) {
         sleep(1); //Se pausa durante un segundo
     }
 }
-
-/// Metodo para sincronizar el servidor activo con los datos del servidor pasivo
-/// \param socketClient Cliente con el servidor activo
-/// \return
-void* PasiveServer::synchronizeAS(void *socketClient) {
-    SocketClient* client = (SocketClient*) socketClient;
-
-    static pthread_mutex_t mutex;
-    pthread_mutex_lock(&mutex); //Se coloca un semaforo
-
-    LinkedList<RMRef_H*>* memory = MemoryManager::getMemory();
-
-    for (int i = 0; i < memory->getSize(); ++i) {
-        string msg = "store,"; //Se crea el string del mensaje
-        string ref = memory->getElement(i)->getData()->createString(); //Se obtiene un string de la referencia
-        char* ref_h = (char*) ref.c_str();
-        msg.append(ref_h, strlen(ref_h));
-
-        const char* message = msg.c_str();
-        client->sendMessage(message);
-
-        sleep(1);
-
-    }
-    pthread_mutex_unlock(&mutex); //Se desbloquea el semaforo
-
-    client->sendMessage("ready");
-
-    pthread_exit(NULL);
-}

@@ -20,8 +20,6 @@ private:
     SocketClient* ASConnection; //active server connection
 
     static void* checkConnectionAS(void* socketClient);
-
-    static void* synchronizeAS(void* socketClient);
 };
 
 

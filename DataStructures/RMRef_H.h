@@ -39,6 +39,8 @@ public:
 
     bool operator==(RMRef_H &ref1);
 
+    bool operator!=(RMRef_H &ref1);
+
 };
 
 std::ostream& operator<< (std::ostream &os, RMRef_H &ref);
